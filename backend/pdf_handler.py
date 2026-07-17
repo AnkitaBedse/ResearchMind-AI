@@ -3,6 +3,8 @@ from pathlib import Path
 
 from fastapi import APIRouter, UploadFile, File
 from pdf_service import extract_text_from_pdf
+from text_cleaner import clean_text
+from chunk_service import split_text
 
 router = APIRouter()
 
@@ -24,9 +26,12 @@ async def upload_pdf(file: UploadFile = File(...)):
         pdf.write(await file.read())
         
     pdf_text = extract_text_from_pdf(Path(file_path))
+    cleaned_text = clean_text(pdf_text)
+    chunks = split_text(cleaned_text)
 
     return {
-        "message": "PDF uploaded successfully",
-        "filename": file.filename,
-        "text": pdf_text
+    "message": "PDF uploaded successfully",
+    "filename": file.filename,
+    "total_chunks": len(chunks),
+    "chunks": chunks
     }
