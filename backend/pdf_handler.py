@@ -6,6 +6,7 @@ from pdf_service import extract_text_from_pdf
 from text_cleaner import clean_text
 from chunk_service import split_text
 from embedding_service import generate_embeddings
+from chroma_service import store_embeddings
 
 router = APIRouter()
 
@@ -30,6 +31,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     cleaned_text = clean_text(pdf_text)
     chunks = split_text(cleaned_text)
     embeddings = generate_embeddings(chunks)
+    store_embeddings(chunks, embeddings)
 
     return {
     "message": "PDF uploaded successfully",
@@ -37,5 +39,6 @@ async def upload_pdf(file: UploadFile = File(...)):
     "total_chunks": len(chunks),
     "chunks": chunks,
     "total_embeddings": len(embeddings),
-    "embedding_dimension": len(embeddings[0])
+    "embedding_dimension": len(embeddings[0]),
+    "stored_in_database": True  
     }
