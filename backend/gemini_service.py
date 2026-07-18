@@ -1,16 +1,12 @@
 import os
-import google.generativeai as genai
-
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
 
-genai.configure(
+client = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY")
 )
-
-model = genai.GenerativeModel("gemini-2.5-flash")
-
 
 def generate_answer(query, context):
 
@@ -29,6 +25,9 @@ Question:
 {query}
 """
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-flash-latest",
+        contents=prompt,
+    )
 
     return response.text
