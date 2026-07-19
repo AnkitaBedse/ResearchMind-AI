@@ -38,14 +38,15 @@ def store_embeddings(chunks, embeddings, filename, file_hash):
         metadatas=metadatas
     )
 
-def retrieve_relevant_chunks(query):
+def retrieve_relevant_chunks(query, n_results=3):
 
     query_embedding = embedding_model.encode(query)
 
     results = collection.query(
-        query_embeddings=[query_embedding.tolist()],
-        n_results=3
+        query_embeddings=[query_embedding.tolist()], 
+        n_results=n_results
     )
+    
     return {
     "documents": results["documents"][0],
     "metadata": results["metadatas"][0]
