@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import FastAPI
 from fastapi import HTTPException
 from pdf_handler import router as pdf_router
@@ -5,14 +7,30 @@ from pydantic import BaseModel
 from chroma_service import retrieve_relevant_chunks
 from gemini_service import (generate_answer,generate_summary,generate_explanation,generate_contributions,
                             generate_limitations,generate_future_work)
+from fastapi.middleware.cors import CORSMiddleware
+
 
 class ChatRequest(BaseModel):
     question: str
+    document_id: str
 
 class ExplainRequest(BaseModel):
     question: str
+    document_id: str
+
+class DocumentRequest(BaseModel):
+    document_id: str
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5174"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(pdf_router)
 
 
@@ -29,7 +47,7 @@ def chat(request: ChatRequest):
             detail="Question cannot be empty."
     )
     
-    retrieved = retrieve_relevant_chunks(request.question)
+    retrieved = retrieve_relevant_chunks(request.question,request.document_id)
     
     # Check if any documents were retrieved
     if not retrieved["documents"]:
@@ -50,10 +68,11 @@ def chat(request: ChatRequest):
     }
     
 @app.post("/summary")
-def summarize():
+def summarize(request: DocumentRequest):
 
     retrieved = retrieve_relevant_chunks(
         "Summarize this research paper",
+        request.document_id,
         n_results=10
     )
 
@@ -83,6 +102,7 @@ def explain(request: ExplainRequest):
 
     retrieved = retrieve_relevant_chunks(
         request.question,
+        request.document_id,
         n_results=5
     )
 
@@ -103,10 +123,11 @@ def explain(request: ExplainRequest):
     }
     
 @app.post("/contributions")
-def contributions():
+def contributions(request: DocumentRequest):
 
     retrieved = retrieve_relevant_chunks(
         "Main contributions of this research paper",
+        request.document_id,
         n_results=8
     )
 
@@ -126,10 +147,11 @@ def contributions():
     }
     
 @app.post("/limitations")
-def limitations():
+def limitations(request: DocumentRequest):
 
     retrieved = retrieve_relevant_chunks(
         "Limitations of this research paper",
+        request.document_id,
         n_results=8
     )
 
@@ -149,10 +171,11 @@ def limitations():
     }
     
 @app.post("/future-work")
-def future_work():
+def future_work(request: DocumentRequest):
 
     retrieved = retrieve_relevant_chunks(
         "Future work of this research paper",
+        request.document_id,
         n_results=8
     )
 

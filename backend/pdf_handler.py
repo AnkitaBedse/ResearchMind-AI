@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import uuid
 
 from fastapi import APIRouter, UploadFile, File
 from pdf_service import extract_text_from_pdf
@@ -35,15 +36,17 @@ async def upload_pdf(file: UploadFile = File(...)):
         return {
             "message": "This PDF has already been uploaded."
         }
+    document_id = str(uuid.uuid4())
     
     pdf_text = extract_text_from_pdf(Path(file_path))
     cleaned_text = clean_text(pdf_text)
     chunks = split_text(cleaned_text)
     embeddings = generate_embeddings(chunks)
-    store_embeddings(chunks, embeddings, file.filename, file_hash)
+    store_embeddings(chunks, embeddings, file.filename, file_hash, document_id)
 
     return {
     "message": "PDF uploaded successfully",
+    "document_id": document_id,
     "filename": file.filename,
     "total_chunks": len(chunks),
     "chunks": chunks,

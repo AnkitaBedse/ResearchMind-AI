@@ -14,16 +14,17 @@ def document_exists(file_hash):
     results = collection.get(
         where={"file_hash": file_hash}
     )
-
+    
     return len(results["ids"]) > 0
 
 
-def store_embeddings(chunks, embeddings, filename, file_hash):
+def store_embeddings(chunks, embeddings, filename, file_hash, document_id):
 
     ids = [str(uuid.uuid4()) for _ in chunks]
 
     metadatas = [
         {
+            "document_id": document_id,    
             "filename": filename,
             "chunk_number": index + 1,
             "file_hash": file_hash
@@ -38,13 +39,17 @@ def store_embeddings(chunks, embeddings, filename, file_hash):
         metadatas=metadatas
     )
 
-def retrieve_relevant_chunks(query, n_results=3):
+def retrieve_relevant_chunks(query,document_id, n_results=3):
 
     query_embedding = embedding_model.encode(query)
 
     results = collection.query(
         query_embeddings=[query_embedding.tolist()], 
-        n_results=n_results
+        n_results=n_results,
+        where={
+            "document_id": document_id
+        }
+
     )
     
     return {
